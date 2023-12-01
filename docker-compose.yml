@@ -1,0 +1,45 @@
+version: '3.8'
+volumes:
+    db_backup:
+        driver: local
+networks:
+    spring-mongo:
+        driver: bridge
+services:
+    db-server:
+        image: mongo
+        container_name: mongodb
+        restart: always
+        volumes:
+          - db_backup:/data/db
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=dev 
+          - MONGO_INITDB_ROOT_PASSWORD=dev@123
+        networks:
+          - spring-mongo
+    app:
+        image: springimg
+        container_name: myapp
+        environment:
+          - MONGO_DB_HOSTNAME=mongodb 
+          - MONGO_DB_USERNAME=dev 
+          - MONGO_DB_PASSWORD=dev@123
+        networks:
+          - spring-mongo
+        restart: always
+        depends_on:
+          - db-server
+    nginx-web:
+        image: nginx
+        container_name: webserver
+        networks:
+          - spring-mongo
+        ports:
+          - 80:80
+        volumes:
+          - /home/ubuntu/nginx-conf:/etc/nginx/nginx.conf
+        restart: always
+        depends_on:
+          - app
+
+
